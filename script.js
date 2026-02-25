@@ -1,9 +1,32 @@
 const boardEl = document.getElementById("board");
 const statusEl = document.getElementById("status");
+const diffBtn = document.getElementById("difficultyBtn");
+const resetBtn = document.getElementById("resetBtn");
 
 let board = ["","","","","","","","",""];
 let gameOver = false;
 let gamesPlayed = 0;
+
+let difficulty = "hard"; // hard | easy
+
+// ----- BOTÓN PARA CAMBIAR DIFICULTAD -----
+diffBtn.onclick = () => {
+    if (difficulty === "hard") {
+        difficulty = "easy";
+        diffBtn.textContent = "Dificultad: Fácil";
+    } else {
+        difficulty = "hard";
+        diffBtn.textContent = "Dificultad: Difícil";
+    }
+};
+
+// ----- BOTÓN NUEVA PARTIDA -----
+resetBtn.onclick = () => {
+    board = ["","","","","","","","",""];
+    gameOver = false;
+    statusEl.textContent = "Tu turno";
+    render();
+};
 
 for (let i = 0; i < 9; i++) {
     let div = document.createElement("div");
@@ -44,15 +67,15 @@ function playerMove(i) {
 }
 
 function aiMove() {
-    if ((gamesPlayed + 1) % 3 === 0) {
+    let move;
+
+    if (difficulty === "easy") {
+        // IA MALA
         let empty = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-        let randomMove = empty[Math.floor(Math.random() * empty.length)];
-        board[randomMove] = "O";
-
+        move = empty[Math.floor(Math.random() * empty.length)];
     } else {
+        // IA DIFÍCIL CON MINIMAX
         let bestScore = -Infinity;
-        let move;
-
         for (let i = 0; i < 9; i++) {
             if (board[i] === "") {
                 board[i] = "O";
@@ -64,9 +87,9 @@ function aiMove() {
                 }
             }
         }
-        board[move] = "O";
     }
 
+    board[move] = "O";
     render();
 
     if (checkWin("O")) {
