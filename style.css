@@ -1,64 +1,37 @@
 body {
     font-family: Arial, sans-serif;
-    background: #f3f3f3;
     text-align: center;
-    margin: 0;
-    padding: 20px;
+    background: #f2f2f2;
 }
 
-h1 {
-    margin-bottom: 10px;
-}
-
-.controls {
-    margin-bottom: 20px;
-}
-
-button {
-    background: #4a90e2;
-    color: white;
-    border: none;
-    padding: 12px 18px;
-    font-size: 16px;
-    border-radius: 5px;
-    cursor: pointer;
-    margin: 0 8px;
-    transition: 0.2s;
-}
-
-button:hover {
-    background: #357ab8;
-}
-
-#status {
-    font-size: 22px;
-    margin: 15px 0;
-    font-weight: bold;
-}
-
-#board {
+.board {
+    width: 300px;
+    height: 300px;
+    margin: 20px auto;
     display: grid;
-    grid-template-columns: repeat(3, 100px);
-    gap: 8px;
-    justify-content: center;
-    margin-top: 20px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 5px;
 }
 
 .cell {
-    width: 100px;
-    height: 100px;
     background: white;
+    border: 2px solid black;
+    font-size: 2.5rem;
     display: flex;
     justify-content: center;
     align-items: center;
-    border-radius: 6px;
-    font-size: 48px;
-    font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 0 5px rgba(0,0,0,0.15);
-    transition: 0.2s;
 }
 
-.cell:hover {
-    background: #e8e8e8;
+.cell.filled {
+    cursor: not-allowed;
+}
+
+#controls {
+    margin-bottom: 15px;
+}
+
+button, select {
+    padding: 10px;
+    font-size: 1rem;
 }
