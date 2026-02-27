@@ -1,147 +1,165 @@
 const boardEl = document.getElementById("board");
 const statusEl = document.getElementById("status");
-const diffBtn = document.getElementById("difficultyBtn");
-const resetBtn = document.getElementById("resetBtn");
+const resetBtn = document.getElementById("reset");
+const difficultyEl = document.getElementById("difficulty");
 
-let board = ["","","","","","","","",""];
+let board = ["", "", "", "", "", "", "", "", ""];
 let gameOver = false;
-let gamesPlayed = 0;
 
-let difficulty = "hard"; // hard | easy
+const human = "X";
+const cpu = "O";
 
-// ----- BOTÓN PARA CAMBIAR DIFICULTAD -----
-diffBtn.onclick = () => {
-    if (difficulty === "hard") {
-        difficulty = "easy";
-        diffBtn.textContent = "Dificultad: Fácil";
-    } else {
-        difficulty = "hard";
-        diffBtn.textContent = "Dificultad: Difícil";
-    }
+// Probabilidades (modo trampa)
+const difficultyMap = {
+    easy: 0.40,     // 40% falla
+    normal: 0.10,   // 10% falla
+    hard: 0.01      // 1% falla
 };
 
-// ----- BOTÓN NUEVA PARTIDA -----
-resetBtn.onclick = () => {
-    board = ["","","","","","","","",""];
-    gameOver = false;
-    statusEl.textContent = "Tu turno";
-    render();
-};
-
+// Construir tablero
 for (let i = 0; i < 9; i++) {
-    let div = document.createElement("div");
-    div.className = "cell";
-    div.dataset.index = i;
-    div.onclick = () => playerMove(i);
-    boardEl.appendChild(div);
+    const cell = document.createElement("div");
+    cell.className = "cell";
+    cell.dataset.index = i;
+    boardEl.appendChild(cell);
+
+    cell.addEventListener("click", () => {
+        if (gameOver || board[i] !== "") return;
+        move(i, human);
+        if (!gameOver) cpuMove();
+    });
+}
+
+function move(index, player) {
+    if (board[index] !== "") return;
+    board[index] = player;
+    render();
+    checkWinner();
 }
 
 function render() {
     document.querySelectorAll(".cell").forEach((c, i) => {
         c.textContent = board[i];
+        c.classList.remove("filled");
+        if (board[i] !== "") c.classList.add("filled");
     });
 }
 
-function playerMove(i) {
-    if (board[i] !== "" || gameOver) return;
+function checkWinner() {
+    const wins = [
+        [0,1,2],[3,4,5],[6,7,8], // filas
+        [0,3,6],[1,4,7],[2,5,8], // columnas
+        [0,4,8],[2,4,6]          // diagonales
+    ];
 
-    board[i] = "X";
-    render();
-
-    if (checkWin("X")) {
-        statusEl.textContent = "Ganaste 😎";
-        gameOver = true;
-        gamesPlayed++;
-        return;
+    for (const [a,b,c] of wins) {
+        if (board[a] && board[a] === board[b] && board[b] === board[c]) {
+            gameOver = true;
+            statusEl.textContent = board[a] + " gana!";
+            return;
+        }
     }
 
-    if (board.every(c => c !== "")) {
-        statusEl.textContent = "Empate";
+    if (!board.includes("")) {
         gameOver = true;
-        gamesPlayed++;
-        return;
+        statusEl.textContent = "Empate!";
     }
-
-    statusEl.textContent = "IA pensando...";
-    setTimeout(aiMove, 400);
 }
 
-function aiMove() {
-    let move;
+// CPU inteligente pero con trampa
+function cpuMove() {
+    let diffValue = difficultyMap[difficultyEl.value]; // porcentaje de fallo
 
-    if (difficulty === "easy") {
-        // IA MALA
-        let empty = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
-        move = empty[Math.floor(Math.random() * empty.length)];
+    // ¿CPU SE EQUIVOCA?
+    let random = Math.random();
+
+    let index;
+
+    if (random < diffValue) {
+        // FALLA ADREDE — elige al azar
+        let available = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+        index = available[Math.floor(Math.random() * available.length)];
     } else {
-        // IA DIFÍCIL CON MINIMAX
-        let bestScore = -Infinity;
-        for (let i = 0; i < 9; i++) {
-            if (board[i] === "") {
-                board[i] = "O";
-                let score = minimax(board, 0, false);
-                board[i] = "";
-                if (score > bestScore) {
-                    bestScore = score;
-                    move = i;
-                }
+        // MOVE PERFECTO (MINIMAX)
+        index = bestMove();
+    }
+
+    move(index, cpu);
+}
+
+function bestMove() {
+    let bestScore = -Infinity;
+    let moveIndex;
+
+    for (let i = 0; i < 9; i++) {
+        if (board[i] === "") {
+            board[i] = cpu;
+            let score = minimax(board, 0, false);
+            board[i] = "";
+            if (score > bestScore) {
+                bestScore = score;
+                moveIndex = i;
             }
         }
     }
 
-    board[move] = "O";
-    render();
-
-    if (checkWin("O")) {
-        statusEl.textContent = "La IA te ganó 😈";
-        gameOver = true;
-        gamesPlayed++;
-        return;
-    }
-
-    if (board.every(c => c !== "")) {
-        statusEl.textContent = "Empate";
-        gameOver = true;
-        gamesPlayed++;
-        return;
-    }
-
-    statusEl.textContent = "Tu turno";
+    return moveIndex;
 }
 
-function checkWin(p) {
-    const w = [
+function minimax(newBoard, depth, isMaximizing) {
+    let result = checkMinimaxWinner(newBoard);
+    if (result !== null) return result;
+
+    if (isMaximizing) {
+        let bestScore = -Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (newBoard[i] === "") {
+                newBoard[i] = cpu;
+                let score = minimax(newBoard, depth + 1, false);
+                newBoard[i] = "";
+                bestScore = Math.max(score, bestScore);
+            }
+        }
+        return bestScore;
+    } else {
+        let bestScore = Infinity;
+        for (let i = 0; i < 9; i++) {
+            if (newBoard[i] === "") {
+                newBoard[i] = human;
+                let score = minimax(newBoard, depth + 1, true);
+                newBoard[i] = "";
+                bestScore = Math.min(score, bestScore);
+            }
+        }
+        return bestScore;
+    }
+}
+
+function checkMinimaxWinner(b) {
+    const wins = [
         [0,1,2],[3,4,5],[6,7,8],
         [0,3,6],[1,4,7],[2,5,8],
         [0,4,8],[2,4,6]
     ];
-    return w.some(c => c.every(i => board[i] === p));
-}
 
-function minimax(boardState, depth, isMax) {
-    if (checkWin("O")) return 10 - depth;
-    if (checkWin("X")) return depth - 10;
-    if (boardState.every(c => c !== "")) return 0;
-
-    if (isMax) {
-        let best = -Infinity;
-        for (let i = 0; i < 9; i++) {
-            if (boardState[i] === "") {
-                boardState[i] = "O";
-                best = Math.max(best, minimax(boardState, depth + 1, false));
-                boardState[i] = "";
-            }
+    for (const [a,b,c] of wins) {
+        if (b[a] && b[a] === b[b] && b[b] === b[c]) {
+            return b[a] === cpu ? 10 : -10;
         }
-        return best;
-    } else {
-        let best = Infinity;
-        for (let i = 0; i < 9; i++) {
-            if (boardState[i] === "") {
-                boardState[i] = "X";
-                best = Math.min(best, minimax(boardState, depth + 1, true));
-                boardState[i] = "";
-            }
-        }
-        return best;
     }
+
+    if (!b.includes("")) return 0;
+    return null;
 }
+
+// Reiniciar
+resetBtn.addEventListener("click", reset);
+
+function reset() {
+    board = ["", "", "", "", "", "", "", "", ""];
+    gameOver = false;
+    statusEl.textContent = "";
+    render();
+}
+
+render();
