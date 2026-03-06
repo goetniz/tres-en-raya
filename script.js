@@ -116,7 +116,7 @@ function playerMove(i){
         statusEl.textContent = "Empate";
         gameOver = true;
 
-        setTimeout(resetGame,1200);
+        setTimeout(resetGame,2000);
         return;
     }
 
