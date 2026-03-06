@@ -9,42 +9,60 @@ const resetBtn = document.getElementById("reset");
 let board = ["", "", "", "", "", "", "", "", ""];
 let gameOver = false;
 
-// Probabilidades de fallo por dificultad
 const failRates = {
-    easy: 0.40,   // 40%
-    normal: 0.10, // 10%
-    hard: 0.01    // 1%
+    easy: 0.40,
+    normal: 0.10,
+    hard: 0.01
 };
 
 // =========================
 // CREAR TABLERO
 // =========================
 function createBoard() {
-    boardEl.innerHTML = ""; // limpiar antes
+
+    boardEl.innerHTML = "";
 
     for (let i = 0; i < 9; i++) {
+
         let cell = document.createElement("div");
         cell.className = "cell";
         cell.dataset.index = i;
         cell.onclick = () => playerMove(i);
+
         boardEl.appendChild(cell);
     }
 }
 
 // =========================
-// RENDERIZADO
+// RENDER
 // =========================
 function render() {
+
     document.querySelectorAll(".cell").forEach((c, i) => {
-        c.textContent = board[i];
+
+        if (board[i] === "X") {
+            c.innerHTML = '<img src="img/x.png" class="pieza">';
+        }
+
+        else if (board[i] === "O") {
+            c.innerHTML = '<img src="img/o.png" class="pieza">';
+        }
+
+        else {
+            c.innerHTML = "";
+        }
+
         c.classList.toggle("filled", board[i] !== "");
+
     });
+
 }
 
 // =========================
 // MOVIMIENTO DEL JUGADOR
 // =========================
 function playerMove(i) {
+
     if (gameOver || board[i] !== "") return;
 
     board[i] = "X";
@@ -64,34 +82,46 @@ function playerMove(i) {
 
     statusEl.textContent = "IA pensando...";
     setTimeout(aiMove, 300);
+
 }
 
 // =========================
 // MOVIMIENTO IA
 // =========================
 function aiMove() {
+
     const difficulty = diffSelect.value;
     const failChance = failRates[difficulty];
 
     let move;
 
-    // Decidir si falla o no
     if (Math.random() < failChance) {
-        // fallo → movimiento aleatorio
-        let empty = board.map((v, i) => v === "" ? i : null).filter(v => v !== null);
+
+        let empty = board
+            .map((v, i) => v === "" ? i : null)
+            .filter(v => v !== null);
+
         move = empty[Math.floor(Math.random() * empty.length)];
+
     } else {
-        // IA perfecta usando Minimax
+
         let bestScore = -Infinity;
+
         for (let i = 0; i < 9; i++) {
+
             if (board[i] === "") {
+
                 board[i] = "O";
+
                 let score = minimax(board, 0, false);
+
                 board[i] = "";
+
                 if (score > bestScore) {
                     bestScore = score;
                     move = i;
                 }
+
             }
         }
     }
@@ -112,49 +142,70 @@ function aiMove() {
     }
 
     statusEl.textContent = "Tu turno";
+
 }
 
 // =========================
 // MINIMAX
 // =========================
 function minimax(state, depth, isMax) {
+
     if (checkWin("O")) return 10 - depth;
     if (checkWin("X")) return depth - 10;
     if (isFull()) return 0;
 
     if (isMax) {
+
         let best = -Infinity;
+
         for (let i = 0; i < 9; i++) {
+
             if (state[i] === "") {
+
                 state[i] = "O";
+
                 best = Math.max(best, minimax(state, depth + 1, false));
+
                 state[i] = "";
             }
         }
+
         return best;
+
     } else {
+
         let best = Infinity;
+
         for (let i = 0; i < 9; i++) {
+
             if (state[i] === "") {
+
                 state[i] = "X";
+
                 best = Math.min(best, minimax(state, depth + 1, true));
+
                 state[i] = "";
             }
         }
+
         return best;
     }
+
 }
 
 // =========================
 // CHECKS
 // =========================
 function checkWin(p) {
+
     const w = [
         [0,1,2],[3,4,5],[6,7,8],
         [0,3,6],[1,4,7],[2,5,8],
         [0,4,8],[2,4,6]
     ];
+
     return w.some(c => c.every(i => board[i] === p));
+
 }
 
 function isFull() {
@@ -165,12 +216,18 @@ function isFull() {
 // RESET
 // =========================
 resetBtn.onclick = () => {
+
     board = ["","","","","","","","",""];
     gameOver = false;
-    statusEl.textContent = "Tu turno";
-    render();
-};
 
-// Crear tablero al iniciar
+    statusEl.textContent = "Tu turno";
+
+    render();
+
+}
+
+// =========================
+// INICIO
+// =========================
 createBoard();
 render();
