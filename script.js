@@ -6,6 +6,10 @@ const statusEl = document.getElementById("status");
 const diffSelect = document.getElementById("difficulty");
 const resetBtn = document.getElementById("reset");
 
+// SONIDOS
+const winSound = new Audio("sound/Win.mp4");
+const loseSound = new Audio("sound/Lose.mp4");
+
 let board = ["","","","","","","","",""];
 let gameOver = false;
 
@@ -36,7 +40,7 @@ function updateHelpThreshold(){
     } else if(helpStage === 1){
         nextHelpThreshold = 7;
     } else {
-        nextHelpThreshold = Math.floor(Math.random() * 7) + 9; // 9 a 15
+        nextHelpThreshold = Math.floor(Math.random() * 7) + 9;
     }
 }
 
@@ -50,7 +54,13 @@ function createBoard(){
         let cell = document.createElement("div");
         cell.className = "cell";
         cell.dataset.index = i;
+
+        // CLICK PC
         cell.onclick = () => playerMove(i);
+
+        // TOUCH TELEFONO
+        cell.addEventListener("touchstart", () => playerMove(i));
+
         boardEl.appendChild(cell);
     }
 }
@@ -95,6 +105,9 @@ function playerMove(i){
         statusEl.textContent = "Ganaste 😎";
         gameOver = true;
 
+        winSound.currentTime = 0;
+        winSound.play();
+
         setTimeout(resetGame,1200);
         return;
     }
@@ -131,7 +144,6 @@ function aiMove(){
         }
     }
 
-    // IA juega mal a propósito
     if(allowPlayerWin){
 
         let empty = board
@@ -152,7 +164,6 @@ function aiMove(){
 
     let move;
 
-    // fallo aleatorio
     if(Math.random() < failChance){
 
         let empty = board
@@ -192,6 +203,9 @@ function aiMove(){
 
         statusEl.textContent = "La IA te ganó 😈";
         gameOver = true;
+
+        loseSound.currentTime = 0;
+        loseSound.play();
 
         setTimeout(resetGame,1200);
         return;
