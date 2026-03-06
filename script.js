@@ -108,7 +108,7 @@ function playerMove(i){
         winSound.currentTime = 0;
         winSound.play();
 
-        setTimeout(resetGame,1200);
+        setTimeout(resetGame,2000);
         return;
     }
 
